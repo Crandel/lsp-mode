@@ -51,7 +51,8 @@ nav:
     - Beancount: page/lsp-beancount.md
     - C++ (ccls): page/lsp-ccls.md
     - C++ (clangd): page/lsp-clangd.md
-    - C#: page/lsp-csharp.md
+    - C# (omnisharp-roslyn): page/lsp-csharp-omnisharp.md
+    - C# (csharp-ls): page/lsp-csharp-ls.md
     - Clojure: page/lsp-clojure.md
     - CMake: page/lsp-cmake.md
     - Crystal: page/lsp-crystal.md
@@ -69,6 +70,7 @@ nav:
     - GDScript: page/lsp-gdscript.md
     - Go (gopls): page/lsp-gopls.md
     - Grammarly: page/lsp-grammarly.md
+    - GraphQL: page/lsp-graphql.md
     - Groovy: page/lsp-groovy.md
     - Hack: page/lsp-hack.md
     - HTML: page/lsp-html.md
@@ -87,9 +89,9 @@ nav:
     - Lua (Lua-Lsp): page/lsp-lua-lsp.md
     - Markdown: page/lsp-markdown.md
     - MSSQL: https://emacs-lsp.github.io/lsp-mssql
+    - Nginx: page/lsp-nginx.md
     - Nim: page/lsp-nim.md
     - Nix: page/lsp-nix.md
-    - OCaml (ocaml): page/lsp-ocaml.md
     - OCaml (ocaml-lsp): page/lsp-ocaml-lsp-server.md
     - Pascal/Object Pascal: page/lsp-pascal.md
     - Perl: page/lsp-perl.md
@@ -100,8 +102,9 @@ nav:
     - Powershell: page/lsp-pwsh.md
     - Prolog: page/lsp-prolog.md
     - PureScript: page/lsp-purescript.md
+    - Python (Pylsp): page/lsp-pylsp.md
     - Python (Jedi Language Server): page/lsp-jedi.md
-    - Python (Palantir): page/lsp-pyls.md
+    - Python (Palantir deprecated): page/lsp-pyls.md
     - Python (Pyright): https://emacs-lsp.github.io/lsp-pyright
     - Python (Microsoft): https://emacs-lsp.github.io/lsp-python-ms
     - R: page/lsp-r.md
@@ -118,6 +121,7 @@ nav:
     - TeX, LaTeX, etc (digestif): page/lsp-tex.md
     - TeX, LaTeX, etc (texlab): page/lsp-texlab.md
     - TeX, LaTeX, etc (texlab, external): page/lsp-latex.md
+    - TOML: page/lsp-toml.md
     - V: page/lsp-v.md
     - Vala: page/lsp-vala.md
     - Verilog/SystemVerilog (hdl-checker): page/lsp-verilog.md
@@ -144,7 +148,7 @@ nav:
       - 2020:
           - '7.0 Release': blog/2020/7.0-release.md
   - Support us:
-      - https://opencollective.com/emacs-lsp
+      - https://github.com/sponsors/emacs-lsp
 
 extra_css:
   - stylesheets/layout.css

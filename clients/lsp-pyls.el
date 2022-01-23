@@ -48,7 +48,7 @@
   "Disable Palantir python-language-server deprecation warning"
   :group 'lsp-pyls
   :type 'boolean
-  :package-version '(lsp-mode . "7.1"))
+  :package-version '(lsp-mode . "8.0.0"))
 
 (defcustom lsp-pyls-server-command '("pyls")
   "Command to start pyls."
@@ -368,7 +368,7 @@ precedence over parameters referenced in config."
   :package-version '(lsp-mode . "6.3"))
 
 (defcustom lsp-pyls-plugins-jedi-environment nil
-  "Specify the environment that jedi runs on where <environmeent>/bin/python
+  "Specify the environment that jedi runs on where <environment>/bin/python
 should be the python executable. This option will be prioritized over
 `lsp-pyls-plugins-jedi-use-pyenv-environment'."
   :type 'string

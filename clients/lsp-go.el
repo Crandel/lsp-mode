@@ -87,7 +87,7 @@ completing function calls."
   intended to affect the behavior of commands invoked by `gopls'
   on the user's behalf. This variable takes a hash table of env
   var names to desired values."
-  :type '(alist :key-type (string :tag "env var name") :value-type (string :tag "value"))
+  :type '(alist :key-type (symbol :tag "env var name") :value-type (string :tag "value"))
   :group 'lsp-go
   :risky t
   :package-version '(lsp-mode "6.2"))
@@ -97,7 +97,7 @@ completing function calls."
   :link '(url-link "https://github.com/golang/tools/blob/67e49ef2d0f326051e22a4a55bdf9344ae1a8ed8/gopls/doc/settings.md#directoryfilters-string")
   :group 'lsp-go
   :type 'lsp-string-vector
-  :package-version '(lsp-mode "7.1"))
+  :package-version '(lsp-mode "8.0.0"))
 
 (define-obsolete-variable-alias
   'lsp-gopls-hover-kind
@@ -229,10 +229,9 @@ $GOPATH/pkg/mod along with the value of
         (mapcar (lambda (path) (concat (file-remote-p default-directory) path)) library-dirs)
       library-dirs)))
 
-(defcustom lsp-go-link-target "godoc.org"
+(defcustom lsp-go-link-target "pkg.go.dev"
   "Which website to use for displaying Go documentation."
-  :type '(choice (const "godoc.org")
-		 (const "pkg.go.dev")
+  :type '(choice (const "pkg.go.dev")
 		 (string :tag "A custom website"))
   :group 'lsp-go
   :package-version '(lsp-mode "7.0.1"))
@@ -241,13 +240,13 @@ $GOPATH/pkg/mod along with the value of
   "If non-nil, hover documentation includes links."
   :type 'boolean
   :group 'lsp-go
-  :package-version '(lsp-mode "7.1"))
+  :package-version '(lsp-mode "8.0.0"))
 
 (defcustom lsp-go-use-gofumpt nil
   "If non-nil, use gofumpt formatting."
   :type 'boolean
   :group 'lsp-go
-  :package-version '(lsp-mode "7.1"))
+  :package-version '(lsp-mode "8.0.0"))
 
 (defcustom lsp-go-goimports-local ""
   "Equivalent of the goimports -local flag, which puts imports beginning with
@@ -255,7 +254,7 @@ $GOPATH/pkg/mod along with the value of
  path whose imports should be grouped separately."
   :type 'string
   :group 'lsp-go
-  :package-version '(lsp-mode "7.1"))
+  :package-version '(lsp-mode "8.0.0"))
 
 (defcustom lsp-go-analyses nil
   "Specify analyses that the user would like to enable or disable. A map of the
@@ -265,7 +264,7 @@ $GOPATH/pkg/mod along with the value of
   :type '(alist :key-type (string :tag "analyzer name") :value-type (boolean :tag "value"))
   :group 'lsp-go
   :risky t
-  :package-version '(lsp-mode "7.1"))
+  :package-version '(lsp-mode "8.0.0"))
 
 (defcustom lsp-go-import-shortcut "Both"
   "Specifies whether import statements should link to documentation or go to 
@@ -275,7 +274,7 @@ $GOPATH/pkg/mod along with the value of
                  (const "Definition"))
   :group 'lsp-go
   :risky t
-  :package-version '(lsp-mode "7.1"))
+  :package-version '(lsp-mode "8.0.0"))
 
 (defcustom lsp-go-symbol-matcher "Fuzzy"
   "Sets the algorithm that is used when finding workspace symbols."
@@ -284,7 +283,7 @@ $GOPATH/pkg/mod along with the value of
                  (const "CaseSensitive"))
   :group 'lsp-go
   :risky t
-  :package-version '(lsp-mode "7.1"))
+  :package-version '(lsp-mode "8.0.0"))
 
 (defcustom lsp-go-symbol-style "Dynamic"
   "Controls how symbols are qualified in symbol responses.
@@ -301,7 +300,7 @@ $GOPATH/pkg/mod along with the value of
                  (const "Package"))
   :group 'lsp-go
   :risky t
-  :package-version '(lsp-mode "7.1"))
+  :package-version '(lsp-mode "8.0.0"))
 
 (lsp-register-custom-settings
  '(("gopls.usePlaceholders" lsp-go-use-placeholders t)

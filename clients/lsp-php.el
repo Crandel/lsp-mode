@@ -85,6 +85,13 @@
   :link '(url-link "https://github.com/bmewburn/vscode-intelephense")
   :package-version '(lsp-mode . "6.1"))
 
+(defcustom lsp-intelephense-php-version "8.0.1"
+  "Minimum version of PHP to refer to. Affects code actions, diagnostic &
+completions."
+  :type 'string
+  :group 'lsp-intelephense
+  :package-version '(lsp-mode . "6.1"))
+
 (defcustom lsp-intelephense-files-max-size 1000000
   "Maximum file size in bytes."
   :type 'number
@@ -196,6 +203,13 @@ language server."
   :group 'lsp-intelephense
   :package-version '(lsp-mode . "6.1"))
 
+(defcustom lsp-intelephense-global-storage-path
+  (expand-file-name (locate-user-emacs-file "intelephense"))
+  "Optional absolute path to global storage dir."
+  :type 'directory
+  :group 'lsp-intelephense
+  :package-version '(lsp-mode . "8.0.1"))
+
 (defcustom lsp-intelephense-clear-cache nil
   "Optional flag to clear server state."
   :type 'boolean
@@ -209,7 +223,8 @@ language server."
   :package-version '(lsp-mode . "6.3"))
 
 (lsp-register-custom-settings
- '(("intelephense.trace.server" lsp-intelephense-trace-server)
+ '(("intelephense.environment.phpVersion" lsp-intelephense-php-version)
+   ("intelephense.trace.server" lsp-intelephense-trace-server)
    ("intelephense.rename.exclude" lsp-intelephense-rename-exclude)
    ("intelephense.telemetry.enabled" lsp-intelephense-telemetry-enabled t)
    ("intelephense.format.enable" lsp-intelephense-format-enable t)
@@ -252,6 +267,7 @@ language server."
                                              ("indexingEnded" #'ignore))
                   :initialization-options (lambda ()
                                             (list :storagePath lsp-intelephense-storage-path
+                                                  :globalStoragePath lsp-intelephense-global-storage-path
                                                   :licenceKey lsp-intelephense-licence-key
                                                   :clearCache lsp-intelephense-clear-cache))
                   :multi-root lsp-intelephense-multi-root
@@ -390,7 +406,8 @@ already present."
                      (unless lsp-php-composer-dir
                        (setq lsp-php-composer-dir (lsp-php-get-composer-dir)))
                      (unless lsp-phpactor-path
-                       (setq lsp-phpactor-path (f-join lsp-php-composer-dir "vendor/phpactor/phpactor/bin/phpactor")))
+                       (setq lsp-phpactor-path (or (executable-find "phpactor")
+                                                   (f-join lsp-php-composer-dir "vendor/phpactor/phpactor/bin/phpactor"))))
                      (list lsp-phpactor-path "language-server")))
   :activation-fn (lsp-activate-on "php")
   ;; `phpactor' is not really that feature-complete: it doesn't support
