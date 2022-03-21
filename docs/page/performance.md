@@ -1,3 +1,6 @@
+---
+root_file: docs/page/performance.md
+---
 Performance
 ===========
 
@@ -39,7 +42,7 @@ export LSP_USE_PLISTS=true
 2. Delete `lsp-mode` related packages.
 3. Make sure that `lsp-use-plists` is non-nil.
 4. Restart `Emacs` and install again `lsp-mode` related packages.
-```
+
 _NB:_ make sure that `lsp-use-plist` does not change after you compile the file.
 
 ### Optional steps

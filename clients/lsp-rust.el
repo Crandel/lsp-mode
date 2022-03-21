@@ -188,12 +188,6 @@ the latest build duration."
   :group 'lsp-rust-rls
   :package-version '(lsp-mode . "6.1"))
 
-(defcustom lsp-rust-analyzer-cargo-target nil
-  "Compilation target (target triple)."
-  :type 'string
-  :group 'lsp-rust-rls
-  :package-version '(lsp-mode . "8.0.0"))
-
 (defcustom lsp-rust-no-default-features nil
   "Do not enable default Cargo features."
   :type 'boolean
@@ -377,6 +371,14 @@ PARAMS progress report notification data."
   :type 'integer
   :group 'lsp-rust-analyzer
   :package-version '(lsp-mode . "6.2.2"))
+
+(defcustom lsp-rust-analyzer-cargo-target nil
+  "Compilation target (target triple)."
+  :type '(choice
+          (string :tag "Target")
+          (const :tag "None" nil))
+  :group 'lsp-rust-analyzer
+  :package-version '(lsp-mode . "8.0.0"))
 
 (defcustom lsp-rust-analyzer-cargo-watch-enable t
   "Enable Cargo watch."
@@ -616,9 +618,19 @@ https://rust-analyzer.github.io/manual.html#auto-import.
 
 (defcustom lsp-rust-analyzer-rustc-source nil
   "Path to the Cargo.toml of the rust compiler workspace."
-  :type 'string
+  :type '(choice
+          (file :tag "Path")
+          (const :tag "None" nil))
   :group 'lsp-rust-analyzer
   :package-version '(lsp-mode . "8.0.0"))
+
+(defcustom lsp-rust-analyzer-linked-projects []
+  "Disable project auto-discovery in favor of explicitly specified set of
+projects. Elements must be paths pointing to `Cargo.toml`, `rust-project.json`,
+or JSON objects in `rust-project.json` format."
+  :type 'lsp-string-vector
+  :group 'lsp-rust-analyzer
+  :package-version '(lsp-mode . "8.0.1"))
 
 (defcustom lsp-rust-analyzer-experimental-proc-attr-macros nil
   "Whether to enable experimental support for expanding proc macro attributes."
@@ -673,6 +685,7 @@ https://rust-analyzer.github.io/manual.html#auto-import.
     :callInfo (:full ,(lsp-json-bool lsp-rust-analyzer-call-info-full))
     :procMacro (:enable ,(lsp-json-bool lsp-rust-analyzer-proc-macro-enable))
     :rustcSource ,lsp-rust-analyzer-rustc-source
+    :linkedProjects ,lsp-rust-analyzer-linked-projects
     :highlighting (:strings ,(lsp-json-bool lsp-rust-analyzer-highlighting-strings))
     :experimental (:procAttrMacros ,(lsp-json-bool lsp-rust-analyzer-experimental-proc-attr-macros))))
 
@@ -1036,7 +1049,7 @@ and run a compilation"
   (-let (((&rust-analyzer:Runnable
            :args (&rust-analyzer:RunnableArgs :cargo-args :workspace-root? :executable-args)
            :label) runnable))
-    (cl-case (aref cargo-args 0)
+    (pcase (aref cargo-args 0)
       ("run" (aset cargo-args 0 "build"))
       ("test" (when (-contains? (append cargo-args ()) "--no-run")
                 (cl-callf append cargo-args (list "--no-run")))))
