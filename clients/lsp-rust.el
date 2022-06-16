@@ -610,19 +610,6 @@ Implies `lsp-rust-analyzer-cargo-run-build-scripts'"
   :group 'lsp-rust-analyzer
   :package-version '(lsp-mode . "6.3.2"))
 
-(defcustom lsp-rust-analyzer-import-merge-behaviour "full"
-  "The strategy to use when inserting new imports or merging imports.
-Valid values are:
- - \"none\": No merging
- - \"full\": Merge all layers of the import trees
- - \"last\": Only merge the last layer of the import trees"
-  :type '(choice
-          (const "none")
-          (const "full")
-          (const "last"))
-  :group 'lsp-rust-analyzer
-  :package-version '(lsp-mode . "8.0.0"))
-
 (defcustom lsp-rust-analyzer-import-prefix "plain"
   "The path structure for newly inserted paths to use.
 Valid values are:
@@ -684,6 +671,12 @@ and field accesses with self prefixed to them when inside a method."
   :group 'lsp-rust-analyzer
   :package-version '(lsp-mode . "8.0.0"))
 
+(defcustom lsp-rust-analyzer-imports-merge-glob t
+  "Whether to allow import insertion to merge new imports into single path glob imports like `use std::fmt::*;`."
+  :type 'boolean
+  :group 'lsp-rust-analyzer
+  :package-version '(lsp-mode . "8.0.1"))
+
 (defcustom lsp-rust-analyzer-import-group t
   "Group inserted imports by the following order:
 https://rust-analyzer.github.io/manual.html#auto-import.
@@ -727,11 +720,11 @@ or JSON objects in `rust-project.json` format."
                   :disabled ,lsp-rust-analyzer-diagnostics-disabled
                   :warningsAsHint ,lsp-rust-analyzer-diagnostics-warnings-as-hint
                   :warningsAsInfo ,lsp-rust-analyzer-diagnostics-warnings-as-info)
-    :assist (:importMergeBehaviour ,lsp-rust-analyzer-import-merge-behaviour
-             :importPrefix ,lsp-rust-analyzer-import-prefix
-             :importGranularity ,lsp-rust-analyzer-import-granularity
-             :importEnforceGranularity ,(lsp-json-bool lsp-rust-analyzer-import-enforce-granularity)
-             :importGroup ,(lsp-json-bool lsp-rust-analyzer-import-group))
+    :imports (:granularity (:enforce ,(lsp-json-bool lsp-rust-analyzer-import-enforce-granularity)
+                            :group ,lsp-rust-analyzer-import-granularity)
+             :group ,(lsp-json-bool lsp-rust-analyzer-import-group)
+             :merge (:glob ,(lsp-json-bool lsp-rust-analyzer-imports-merge-glob))
+             :prefix ,lsp-rust-analyzer-import-prefix)
     :lruCapacity ,lsp-rust-analyzer-lru-capacity
     :checkOnSave (:enable ,(lsp-json-bool lsp-rust-analyzer-cargo-watch-enable)
                   :command ,lsp-rust-analyzer-cargo-watch-command
@@ -1195,7 +1188,8 @@ https://github.com/rust-analyzer/rust-analyzer/blob/master/docs/dev/lsp-extensio
 
 (defun lsp-rust-analyzer--related-tests ()
   "Get runnable test items related to the current TextDocumentPosition.
-Calls a rust-analyzer LSP extension endpoint that returns a wrapper over Runnable[]"
+Calls a rust-analyzer LSP extension endpoint that returns a wrapper over
+Runnable[]."
   (lsp-send-request (lsp-make-request
                      "rust-analyzer/relatedTests"
                      (lsp--text-document-position-params))))
@@ -1204,8 +1198,9 @@ Calls a rust-analyzer LSP extension endpoint that returns a wrapper over Runnabl
   "Call the endpoint and ask for user selection.
 
 Cannot reuse `lsp-rust-analyzer--select-runnable' because the runnables endpoint
-responds with Runnable[], while relatedTests responds with TestInfo[], which is a wrapper
-over runnable. Also, this method doesn't set the `lsp-rust-analyzer--last-runnable' variable"
+responds with Runnable[], while relatedTests responds with TestInfo[],
+which is a wrapper over runnable. Also, this method doesn't set
+the `lsp-rust-analyzer--last-runnable' variable."
   (-if-let* ((resp (lsp-rust-analyzer--related-tests))
              (runnables (seq-map
                          #'lsp:rust-analyzer-related-tests-runnable
