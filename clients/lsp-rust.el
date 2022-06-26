@@ -579,6 +579,14 @@ for formatting."
   :group 'lsp-rust-analyzer
   :package-version '(lsp-mode . "6.3.2"))
 
+(defcustom lsp-rust-analyzer-rustfmt-rangeformatting-enable nil
+  "Enables the use of rustfmt's unstable range formatting command for the
+`textDocument/rangeFormatting` request. The rustfmt option is unstable and only
+available on a nightly build."
+  :type 'boolean
+  :group 'lsp-rust-analyzer
+  :package-version '(lsp-mode . "8.0.1"))
+
 (defcustom lsp-rust-analyzer-completion-add-call-parenthesis t
   "Whether to add parenthesis when completing functions."
   :type 'boolean
@@ -672,7 +680,8 @@ and field accesses with self prefixed to them when inside a method."
   :package-version '(lsp-mode . "8.0.0"))
 
 (defcustom lsp-rust-analyzer-imports-merge-glob t
-  "Whether to allow import insertion to merge new imports into single path glob imports like `use std::fmt::*;`."
+  "Whether to allow import insertion to merge new imports into single path
+glob imports like `use std::fmt::*;`."
   :type 'boolean
   :group 'lsp-rust-analyzer
   :package-version '(lsp-mode . "8.0.1"))
@@ -745,7 +754,8 @@ or JSON objects in `rust-project.json` format."
             :useRustcWrapperForBuildScripts ,(lsp-json-bool lsp-rust-analyzer-use-rustc-wrapper-for-build-scripts)
             :unsetTest ,lsp-rust-analyzer-cargo-unset-test)
     :rustfmt (:extraArgs ,lsp-rust-analyzer-rustfmt-extra-args
-              :overrideCommand ,lsp-rust-analyzer-rustfmt-override-command)
+              :overrideCommand ,lsp-rust-analyzer-rustfmt-override-command
+              :rangeFormatting (:enable ,(lsp-json-bool lsp-rust-analyzer-rustfmt-rangeformatting-enable)))
     :inlayHints (:bindingModeHints ,(lsp-json-bool lsp-rust-analyzer-binding-mode-hints)
                  :chainingHints ,(lsp-json-bool lsp-rust-analyzer-display-chaining-hints)
                  :closingBraceHints (:enable ,(lsp-json-bool lsp-rust-analyzer-closing-brace-hints)
