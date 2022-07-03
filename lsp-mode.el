@@ -4744,6 +4744,11 @@ Applies on type formatting."
 
 
 
+(defcustom lsp-warn-no-matched-clients t
+  "Whether to show messages when there are no supported clients."
+  :group 'lsp-mode
+  :type 'boolean)
+
 (defun lsp-buffer-language ()
   "Get language corresponding current buffer."
   (or (->> lsp-language-id-configuration
@@ -4753,9 +4758,11 @@ Applies on type formatting."
                             (s-matches? mode-or-pattern (buffer-file-name))) language)
                       ((eq mode-or-pattern major-mode) language))))
            cl-rest)
-      (lsp-warn "Unable to calculate the languageId for buffer `%s'. Take a look at `lsp-language-id-configuration'. The `major-mode' is %s"
-                (buffer-name)
-                major-mode)))
+      (and lsp-warn-no-matched-clients
+           (lsp-warn "Unable to calculate the languageId for buffer `%s'. \
+Take a look at `lsp-language-id-configuration'. The `major-mode' is %s"
+                     (buffer-name)
+                     major-mode))))
 
 (defun lsp-activate-on (&rest languages)
   "Returns language activation function.
@@ -6538,12 +6545,6 @@ server. WORKSPACE is the active workspace."
            (lsp--on-notification workspace json-data))
           ('request (lsp--on-request workspace json-data)))))))
 
-(defvar lsp-parsed-message nil
-  "This will store the string representation of the json message.
-
-In some cases like #1807 we lose information during json
-deserialization.")
-
 (defun lsp--create-filter-function (workspace)
   "Make filter for the workspace."
   (let ((body-received 0)
@@ -7363,46 +7364,34 @@ SESSION is the active session."
                              :name (f-filename folder))))
                (apply 'vector)
                (list :workspaceFolders))))
-       (lambda (response)
-         (unless response
-           (lsp--spinner-stop)
-           (signal 'lsp-empty-response-error (list "initialize")))
+       (-lambda ((&InitializeResult :capabilities))
+         ;; we know that Rust Analyzer will send {} which will be parsed as null
+         ;; when using plists
+         (when (equal 'rust-analyzer server-id)
+           (-> capabilities
+               (lsp:server-capabilities-text-document-sync?)
+               (lsp:set-text-document-sync-options-save? t)))
 
-         (let* ((capabilities (lsp:initialize-result-capabilities response))
-                (json-object-type 'hash-table)
-                (text-document-sync (-some-> lsp-parsed-message
-                                      (json-read-from-string)
-                                      (ht-get "result")
-                                      (ht-get "capabilities")
-                                      (ht-get "textDocumentSync")))
-                (save (when (ht? text-document-sync)
-                        (ht-get text-document-sync "save"))))
-           ;; see #1807
-           (when (and (ht? save) (ht-empty? save))
-             (-> capabilities
-                 (lsp:server-capabilities-text-document-sync?)
-                 (lsp:set-text-document-sync-options-save? save)))
+         (setf (lsp--workspace-server-capabilities workspace) capabilities
+               (lsp--workspace-status workspace) 'initialized)
 
-           (setf (lsp--workspace-server-capabilities workspace) capabilities
-                 (lsp--workspace-status workspace) 'initialized)
+         (with-lsp-workspace workspace
+           (lsp-notify "initialized" lsp--empty-ht))
 
-           (with-lsp-workspace workspace
-             (lsp-notify "initialized" lsp--empty-ht))
+         (when initialized-fn (funcall initialized-fn workspace))
 
-           (when initialized-fn (funcall initialized-fn workspace))
+         (cl-callf2 -filter #'lsp-buffer-live-p (lsp--workspace-buffers workspace))
+         (->> workspace
+              (lsp--workspace-buffers)
+              (mapc (lambda (buffer)
+                      (lsp-with-current-buffer buffer
+                        (lsp--open-in-workspace workspace)))))
 
-           (cl-callf2 -filter #'lsp-buffer-live-p (lsp--workspace-buffers workspace))
-           (->> workspace
-                (lsp--workspace-buffers)
-                (mapc (lambda (buffer)
-                        (lsp-with-current-buffer buffer
-                          (lsp--open-in-workspace workspace)))))
-
-           (with-lsp-workspace workspace
-             (run-hooks 'lsp-after-initialize-hook))
-           (lsp--info "%s initialized successfully in folders: %s"
-                      (lsp--workspace-print workspace)
-                      (lsp-workspace-folders workspace))))
+         (with-lsp-workspace workspace
+           (run-hooks 'lsp-after-initialize-hook))
+         (lsp--info "%s initialized successfully in folders: %s"
+                    (lsp--workspace-print workspace)
+                    (lsp-workspace-folders workspace)))
        :mode 'detached))
     workspace))
 
@@ -7763,7 +7752,16 @@ nil."
         ;; https://github.com/emacs-lsp/lsp-mode/issues/2364 for
         ;; discussion.
         (make-directory (f-join lsp-server-install-dir "npm" package "lib") 'parents)
-        (lsp-async-start-process callback
+        (lsp-async-start-process (lambda ()
+                                   (if (string-empty-p
+                                        (string-trim (shell-command-to-string
+                                                      (mapconcat #'shell-quote-argument `(,npm-binary "view" ,package "peerDependencies") " "))))
+                                       callback
+                                     (let ((default-directory (f-join lsp-server-install-dir "npm" package "lib" "node_modules" package)))
+                                       (lsp-async-start-process callback
+                                                                error-callback
+                                                                (executable-find "npx")
+                                                                "npm-install-peers"))))
                                  error-callback
                                  npm-binary
                                  "-g"
@@ -8559,11 +8557,6 @@ Errors if there are none."
   (interactive (list (lsp--read-workspace)))
   (lsp--warn "Restarting %s" (lsp--workspace-print workspace))
   (with-lsp-workspace workspace (lsp--shutdown-workspace t)))
-
-(defcustom lsp-warn-no-matched-clients t
-  "Don't show message when there are no supported clients."
-  :group 'lsp-mode
-  :type 'boolean)
 
 ;;;###autoload
 (defun lsp (&optional arg)
