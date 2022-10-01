@@ -743,6 +743,7 @@ Changes take effect only when a new session is started."
                                         (".*\\.ebuild$" . "shellscript")
                                         (".*/PKGBUILD$" . "shellscript")
                                         (".*\\.ttcn3$" . "ttcn3")
+                                        (".*\\ya?ml$" . "yaml")
                                         (ada-mode . "ada")
                                         (nxml-mode . "xml")
                                         (sql-mode . "sql")
@@ -802,7 +803,7 @@ Changes take effect only when a new session is started."
                                         (swift-mode . "swift")
                                         (elixir-mode . "elixir")
                                         (conf-javaprop-mode . "spring-boot-properties")
-                                        (yaml-mode . "spring-boot-properties-yaml")
+                                        (yaml-mode . "yaml")
                                         (ruby-mode . "ruby")
                                         (enh-ruby-mode . "ruby")
                                         (fortran-mode . "fortran")
@@ -4024,7 +4025,7 @@ yet."
 
       (when (and lsp-enable-indentation
                  (lsp-feature? "textDocument/rangeFormatting"))
-        (add-function :override (var indent-region-function) #'lsp-format-region))
+        (add-function :override (local 'indent-region-function) #'lsp-format-region))
 
       (when (and lsp-enable-symbol-highlighting
                  (lsp-feature? "textDocument/documentHighlight"))
@@ -4044,12 +4045,12 @@ yet."
   (lsp--remove-overlays 'lsp-color)
 
   (when (advice-function-member-p 'lsp--imenu-create-index imenu-create-index-function)
-    (remove-function (var imenu-create-index-function) #'lsp--imenu-create-index)
+    (remove-function (local 'imenu-create-index-function) #'lsp--imenu-create-index)
     (setq-local imenu-menubar-modified-tick 0)
     (setq-local imenu--index-alist nil)
     (imenu--cleanup))
 
-  (remove-function (var indent-region-function) #'lsp-format-region)
+  (remove-function (local 'indent-region-function) #'lsp-format-region)
 
   (remove-hook 'lsp-on-change-hook #'lsp--document-color t)
   (remove-hook 'lsp-on-idle-hook #'lsp--document-highlight t)
@@ -7033,7 +7034,7 @@ Return a nested alist keyed by symbol names. e.g.
 (defun lsp-enable-imenu ()
   "Use lsp-imenu for the current buffer."
   (imenu--cleanup)
-  (add-function :override (var imenu-create-index-function) #'lsp--imenu-create-index)
+  (add-function :override (local 'imenu-create-index-function) #'lsp--imenu-create-index)
   (setq-local imenu-menubar-modified-tick -1)
   (setq-local imenu--index-alist nil)
   (when menu-bar-mode
