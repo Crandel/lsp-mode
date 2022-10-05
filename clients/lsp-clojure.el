@@ -259,14 +259,10 @@ If there are more arguments expected after the line and column numbers."
   (lsp--cur-workspace-check)
   (let* ((log-path (-> (lsp--json-serialize (lsp-request "clojure/serverInfo/raw" nil))
                        (lsp--read-json)
-                       (lsp-get :log-path)))
-         (original-file-log-buffer (find-file-noselect log-path)))
-    (with-current-buffer original-file-log-buffer
-      (add-hook 'after-revert-hook (-partial #'lsp-clojure--server-log-revert-function original-file-log-buffer) nil t)
-      (auto-revert-tail-mode)
-      (read-only-mode))
-    (lsp-clojure--server-log-revert-function original-file-log-buffer)
-    (switch-to-buffer lsp-clojure-server-buffer-name)))
+                       (lsp-get :log-path))))
+    (with-current-buffer (find-file log-path)
+      (read-only-mode)
+      (goto-char (point-max)))))
 
 (defun lsp-clojure-server-info-raw ()
   "Request server info raw data."
@@ -456,9 +452,12 @@ It updates the test tree view data."
 
 (defun lsp-clojure-semantic-tokens-refresh (&rest _)
   "Force refresh semantic tokens."
-  (when (and lsp-semantic-tokens-enable
-             (lsp-find-workspace 'clojure-lsp (buffer-file-name)))
-    (lsp-semantic-tokens--enable)))
+  (when-let ((workspace (and lsp-semantic-tokens-enable
+                             (lsp-find-workspace 'clojure-lsp (buffer-file-name)))))
+    (--each (lsp--workspace-buffers workspace)
+      (when (lsp-buffer-live-p it)
+        (lsp-with-current-buffer it
+          (lsp-semantic-tokens--enable))))))
 
 (with-eval-after-load 'cider
   (when lsp-semantic-tokens-enable
