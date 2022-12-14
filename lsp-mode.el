@@ -3402,6 +3402,14 @@ CANCEL-TOKEN is the token that can be used to cancel request."
       (let* ((start-time (current-time))
              (method (plist-get body :method))
              (id (cl-incf lsp-last-id))
+             (buf (current-buffer))
+             (cancel-callback (when cancel-callback
+                                (pcase mode
+                                  ((or 'alive 'tick 'unchanged)
+                                   (lambda ()
+                                     (with-current-buffer buf
+                                       (funcall cancel-callback))))
+                                  (_ cancel-callback))))
              ;; calculate what are the (hook . local) pairs which will cancel
              ;; the request
              (hooks (pcase mode
@@ -3409,7 +3417,6 @@ CANCEL-TOKEN is the token that can be used to cancel request."
                       ('tick      '((kill-buffer-hook . t) (after-change-functions . t)))
                       ('unchanged '((after-change-functions . t) (post-command-hook . nil)))
                       ('current   '((post-command-hook . nil)))))
-             (buf (current-buffer))
              ;; note: lambdas in emacs can be compared but we should make sure
              ;; that all of the captured arguments are the same - in our case
              ;; `lsp--create-request-cancel' will return the same lambda when
@@ -3450,13 +3457,6 @@ CANCEL-TOKEN is the token that can be used to cancel request."
                                (funcall callback :error)
                                (lsp--request-cleanup-hooks id)
                                (funcall error-callback error)))
-             (cancel-callback (when cancel-callback
-                                (pcase mode
-                                  ((or 'alive 'tick 'unchanged)
-                                   (lambda ()
-                                     (with-current-buffer buf
-                                       (funcall cancel-callback))))
-                                  (_ cancel-callback))))
              (body (plist-put body :id id)))
 
         ;; cancel request in any of the hooks
@@ -7782,6 +7782,16 @@ When prefix UPDATE? is t force installation even if the server is present."
                       (and (not (lsp--client-download-in-progress? chosen-client))
                            (lsp--server-binary-present? chosen-client)))))
     (lsp--install-server-internal chosen-client update?)))
+
+;;;###autoload
+(defun lsp-uninstall-server (dir)
+  "Delete a LSP server from `lsp-server-install-dir'."
+  (interactive
+   (list (read-directory-name "Uninstall LSP server: " (f-slash lsp-server-install-dir) nil t)))
+  (unless (file-directory-p dir)
+    (user-error "Couldn't find %S directory" dir))
+  (delete-directory dir 'recursive)
+  (message "Uninstalled %S" (file-name-nondirectory dir)))
 
 ;;;###autoload
 (defun lsp-update-server (&optional server-id)
