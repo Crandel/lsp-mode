@@ -795,7 +795,9 @@ Changes take effect only when a new session is started."
                                         (mhtml-mode . "html")
                                         (mint-mode . "mint")
                                         (go-dot-mod-mode . "go.mod")
+                                        (go-mod-ts-mode . "go.mod")
                                         (go-mode . "go")
+                                        (go-ts-mode . "go")
                                         (graphql-mode . "graphql")
                                         (haskell-mode . "haskell")
                                         (hack-mode . "hack")
@@ -827,6 +829,7 @@ Changes take effect only when a new session is started."
                                         (dart-mode . "dart")
                                         (erlang-mode . "erlang")
                                         (dockerfile-mode . "dockerfile")
+                                        (dockerfile-ts-mode . "dockerfile")
                                         (csharp-mode . "csharp")
                                         (csharp-tree-sitter-mode . "csharp")
                                         (csharp-ts-mode . "csharp")
@@ -842,6 +845,7 @@ Changes take effect only when a new session is started."
                                         (nim-mode . "nim")
                                         (dhall-mode . "dhall")
                                         (cmake-mode . "cmake")
+                                        (cmake-ts-mode . "cmake")
                                         (purescript-mode . "purescript")
                                         (gdscript-mode . "gdscript")
                                         (perl-mode . "perl")
@@ -859,6 +863,7 @@ Changes take effect only when a new session is started."
                                         (gfm-mode . "markdown")
                                         (beancount-mode . "beancount")
                                         (conf-toml-mode . "toml")
+                                        (toml-ts-mode . "toml")
                                         (org-mode . "org")
                                         (org-journal-mode . "org")
                                         (nginx-mode . "nginx")
@@ -4869,20 +4874,36 @@ Applies on type formatting."
   :group 'lsp-mode
   :type 'boolean)
 
+(defun lsp-buffer-language--configured-id ()
+  "Return nil when not registered."
+  (->> lsp-language-id-configuration
+       (-first
+        (-lambda ((mode-or-pattern . language))
+          (cond
+           ((and (stringp mode-or-pattern)
+                 (s-matches? mode-or-pattern (buffer-file-name)))
+            language)
+           ((eq mode-or-pattern major-mode) language))))
+       cl-rest))
+
+(defvar-local lsp--buffer-language nil
+  "Locally cached returned value of `lsp-buffer-language'.")
+
 (defun lsp-buffer-language ()
   "Get language corresponding current buffer."
-  (or (->> lsp-language-id-configuration
-           (-first (-lambda ((mode-or-pattern . language))
-                     (cond
-                      ((and (stringp mode-or-pattern)
-                            (s-matches? mode-or-pattern (buffer-file-name))) language)
-                      ((eq mode-or-pattern major-mode) language))))
-           cl-rest)
-      (and lsp-warn-no-matched-clients
-           (lsp-warn "Unable to calculate the languageId for buffer `%s'. \
+  (or lsp--buffer-language
+      (let* ((configured-language (lsp-buffer-language--configured-id)))
+        (setq lsp--buffer-language
+              (or configured-language
+                  ;; ensure non-nil
+                  (string-remove-suffix "-mode" (symbol-name major-mode))))
+        (when (and lsp-warn-no-matched-clients
+                   (null configured-language))
+          (lsp-warn "Unable to calculate the languageId for buffer `%s'. \
 Take a look at `lsp-language-id-configuration'. The `major-mode' is %s"
-                     (buffer-name)
-                     major-mode))))
+                    (buffer-name)
+                    major-mode))
+        lsp--buffer-language)))
 
 (defun lsp-activate-on (&rest languages)
   "Returns language activation function.
@@ -5160,9 +5181,12 @@ If EXCLUDE-DECLARATION is non-nil, request the server to include declarations."
                               `(,buffer ,(posn-point event))
                             `(,(current-buffer) ,(point)))]
       (with-current-buffer buffer
-        ;; Markdown-mode puts the url in 'help-echo
-        (-some-> (get-text-property point 'help-echo)
-          (lsp--document-link-handle-target))))))
+        (when-let* ((face (get-text-property point 'face))
+                    (url (or (and (eq face 'markdown-link-face)
+                                  (get-text-property point 'help-echo))
+                             (and (memq face '(markdown-url-face markdown-plain-url-face))
+                                  (nth 3 (markdown-link-at-pos point))))))
+          (lsp--document-link-handle-target url))))))
 
 (defvar lsp-help-mode-map
   (-doto (make-sparse-keymap)
@@ -5221,6 +5245,32 @@ MODE is the mode used in the parent frame."
   (setq prettify-symbols-compose-predicate
         (lambda (_start _end _match) t))
   (prettify-symbols-mode 1))
+
+(defvar lsp-help-link-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-2] #'lsp--help-open-link)
+    (define-key map "\r" #'lsp--help-open-link)
+    map)
+  "Keymap active on links in *lsp-help* mode.")
+
+(defun lsp--fix-markdown-links ()
+  (let ((inhibit-read-only t)
+        (inhibit-modification-hooks t)
+        (prop))
+    (save-restriction
+      (goto-char (point-min))
+      (while (setq prop (markdown-find-next-prop 'face))
+        (let ((end (next-single-property-change (car prop) 'face)))
+          (when (memq (get-text-property (car prop) 'face)
+                      '(markdown-link-face
+                        markdown-url-face
+                        markdown-plain-url-face))
+            (add-text-properties (car prop) end
+                                 (list 'button t
+                                       'category 'lsp-help-link
+                                       'follow-link t
+                                       'keymap lsp-help-link-keymap)))
+          (goto-char end))))))
 
 (defun lsp--buffer-string-visible ()
   "Return visible buffer string.
@@ -5342,7 +5392,9 @@ In addition, each can have property:
             ;;
             ;; See #2984
             (ignore-errors (font-lock-ensure))
-            (lsp--display-inline-image mode))
+            (lsp--display-inline-image mode)
+            (when (eq mode 'lsp--render-markdown)
+              (lsp--fix-markdown-links)))
           (lsp--buffer-string-visible))
       (error str))))
 
