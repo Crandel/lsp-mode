@@ -772,6 +772,7 @@ Changes take effect only when a new session is started."
                                         (cython-mode . "python")
                                         (lsp--render-markdown . "markdown")
                                         (rust-mode . "rust")
+                                        (rust-ts-mode . "rust")
                                         (rustic-mode . "rust")
                                         (kotlin-mode . "kotlin")
                                         (css-mode . "css")
@@ -821,6 +822,7 @@ Changes take effect only when a new session is started."
                                         (elixir-mode . "elixir")
                                         (conf-javaprop-mode . "spring-boot-properties")
                                         (yaml-mode . "yaml")
+                                        (yaml-ts-mode . "yaml")
                                         (ruby-mode . "ruby")
                                         (enh-ruby-mode . "ruby")
                                         (fortran-mode . "fortran")
@@ -5260,7 +5262,8 @@ MODE is the mode used in the parent frame."
     (save-restriction
       (goto-char (point-min))
       (while (setq prop (markdown-find-next-prop 'face))
-        (let ((end (next-single-property-change (car prop) 'face)))
+        (let ((end (or (next-single-property-change (car prop) 'face)
+                       (point-max))))
           (when (memq (get-text-property (car prop) 'face)
                       '(markdown-link-face
                         markdown-url-face
@@ -5382,21 +5385,20 @@ In addition, each can have property:
 (defun lsp--fontlock-with-mode (str mode)
   "Fontlock STR with MODE."
   (let ((lsp-buffer-major-mode major-mode))
-    (condition-case nil
-        (with-temp-buffer
-          (insert str)
-          (delay-mode-hooks (funcall mode))
-          (cl-flet ((window-body-width () lsp-window-body-width))
-            ;; This can go wrong in some cases, and the fontification would
-            ;; not work as expected.
-            ;;
-            ;; See #2984
-            (ignore-errors (font-lock-ensure))
-            (lsp--display-inline-image mode)
-            (when (eq mode 'lsp--render-markdown)
-              (lsp--fix-markdown-links)))
-          (lsp--buffer-string-visible))
-      (error str))))
+    (with-temp-buffer
+      (with-demoted-errors "Error during doc rendering: %s"
+        (insert str)
+        (delay-mode-hooks (funcall mode))
+        (cl-flet ((window-body-width () lsp-window-body-width))
+          ;; This can go wrong in some cases, and the fontification would
+          ;; not work as expected.
+          ;;
+          ;; See #2984
+          (ignore-errors (font-lock-ensure))
+          (lsp--display-inline-image mode)
+          (when (eq mode 'lsp--render-markdown)
+            (lsp--fix-markdown-links))))
+      (lsp--buffer-string-visible))))
 
 (defun lsp--render-string (str language)
   "Render STR using `major-mode' corresponding to LANGUAGE.
