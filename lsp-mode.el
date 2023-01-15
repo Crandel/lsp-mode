@@ -3454,9 +3454,9 @@ CANCEL-TOKEN is the token that can be used to cancel request."
                           hooks)
                 (remhash cancel-token lsp--cancelable-requests)))
              (callback (pcase mode
-                         ((or 'alive 'tick) (lambda (&rest args)
-                                              (with-current-buffer buf
-                                                (apply callback args))))
+                         ((or 'alive 'tick 'unchanged) (lambda (&rest args)
+                                                         (with-current-buffer buf
+                                                           (apply callback args))))
                          (_ callback)))
              (callback (lsp--create-async-callback callback
                                                    method
@@ -8285,6 +8285,13 @@ remote machine and vice versa."
                                        (lsp--client-priority client)))
                              selected-clients)))
       selected-clients)))
+
+(defun lsp-workspace-remove-all-folders()
+  "Delete all lsp tracked folders."
+  (interactive)
+  (--each (lsp-session-folders (lsp-session))
+    (lsp-workspace-folders-remove it)))
+
 
 (defun lsp-register-client (client)
   "Registers LSP client CLIENT."
