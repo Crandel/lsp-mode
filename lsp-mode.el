@@ -987,11 +987,6 @@ must be used for handling a particular message.")
   "Face used for highlighting symbols being written to."
   :group 'lsp-mode)
 
-(defface lsp-face-xref-items
-  '((t :inherit highlight))
-  "Face used for highlighting xref items."
-  :group 'lsp-mode)
-
 (define-obsolete-variable-alias 'lsp-lens-auto-enable
   'lsp-lens-enable "lsp-mode 7.0.1")
 
@@ -1774,7 +1769,12 @@ On other systems, returns path without change."
          (file
           (concat (decode-coding-string (url-filename url)
                                         (or locale-coding-system 'utf-8))
-                  (when target
+                  (when (and target
+                             (not (s-match
+                                   (rx "#" (group (1+ num)) (or "," "#")
+                                       (group (1+ num))
+                                       string-end)
+                                   uri)))
                     (concat "#" target))))
          (file-name (if (and type (not (string= type "file")))
                         (if-let ((handler (lsp--get-uri-handler type)))
@@ -4869,7 +4869,7 @@ Applies on type formatting."
     (pcase type
       ("file"
        (find-file (lsp--uri-to-path url))
-       (-when-let ((_ line column) (s-match (rx "#" (group (1+ num)) "," (group (1+ num))) url))
+       (-when-let ((_ line column) (s-match (rx "#" (group (1+ num)) (or "," "#") (group (1+ num))) url))
          (goto-char (lsp--position-to-point
                      (lsp-make-position :character (1- (string-to-number column))
                                         :line (1- (string-to-number line)))))))
@@ -5045,7 +5045,7 @@ identifier and the position respectively."
          (len (length line)))
     (add-face-text-property (max (min start-char len) 0)
                             (max (min end-char len) 0)
-                            'lsp-face-xref-items t line)
+                            'xref-match t line)
     ;; LINE is nil when FILENAME is not being current visited by any buffer.
     (xref-make (or line filename)
                (xref-make-file-location
