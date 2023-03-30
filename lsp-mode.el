@@ -340,6 +340,7 @@ the server has requested that."
     "[/\\\\]\\.yarn\\'"
     "[/\\\\]\\.fslckout\\'"
     "[/\\\\]\\.tox\\'"
+    "[/\\\\]\\.nox\\'"
     "[/\\\\]dist\\'"
     "[/\\\\]dist-newstyle\\'"
     "[/\\\\]\\.stack-work\\'"
@@ -1880,7 +1881,7 @@ IGNORED-DIRECTORIES is a list of regexes to filter out directories we don't
 want to watch."
   (let
       ((full-path (f-join dir path)))
-    (and (f-dir-p full-path)
+    (and (file-accessible-directory-p full-path)
          (not (equal path "."))
          (not (equal path ".."))
          (not (lsp--string-match-any ignored-directories full-path)))))
