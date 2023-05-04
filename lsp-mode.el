@@ -183,7 +183,7 @@ As defined by the Language Server Protocol 3.16."
      lsp-lua lsp-markdown lsp-marksman lsp-mint lsp-nginx lsp-nim lsp-nix lsp-magik
      lsp-metals lsp-mssql lsp-ocaml lsp-openscad lsp-pascal lsp-perl lsp-perlnavigator
      lsp-pls lsp-php lsp-pwsh lsp-pyls lsp-pylsp lsp-pyright lsp-python-ms lsp-purescript
-     lsp-r lsp-racket lsp-remark lsp-ruff-lsp lsp-rf lsp-rust lsp-solargraph
+     lsp-r lsp-racket lsp-remark lsp-ruff-lsp lsp-rf lsp-rust lsp-shader lsp-solargraph
      lsp-sorbet lsp-sourcekit lsp-sonarlint lsp-tailwindcss lsp-tex lsp-terraform
      lsp-toml lsp-ttcn3 lsp-typeprof lsp-v lsp-vala lsp-verilog lsp-vetur lsp-volar
      lsp-vhdl lsp-vimscript lsp-xml lsp-yaml lsp-ruby-lsp lsp-ruby-syntax-tree
@@ -374,7 +374,7 @@ the server has requested that."
     "[/\\\\]autom4te.cache\\'"
     "[/\\\\]\\.reference\\'"
     ;; Bazel
-    "bazel-[^/\\\\]+\\'"
+    "[/\\\\]bazel-[^/\\\\]+\\'"
     ;; CSharp
     "[/\\\\]\\.meta\\'"
     ;; Unity
@@ -914,7 +914,8 @@ Changes take effect only when a new session is started."
     (tiltfile-mode . "tiltfile")
     (bibtex-mode . "bibtex")
     (rst-mode . "restructuredtext")
-    (glsl-mode . "glsl"))
+    (glsl-mode . "glsl")
+    (shader-mode . "shaderlab"))
   "Language id configuration.")
 
 (defvar lsp--last-active-workspaces nil
@@ -1993,8 +1994,8 @@ regex in IGNORED-FILES."
     ccls consult-lsp dap-mode helm-lsp lsp-dart lsp-docker lsp-focus lsp-grammarly
     lsp-haskell lsp-ivy lsp-java lsp-javacomp lsp-jedi lsp-julia lsp-latex lsp-ltex
     lsp-metals lsp-mssql lsp-origami lsp-p4 lsp-pascal lsp-pyre lsp-pyright
-    lsp-python-ms lsp-rescript lsp-sonarlint lsp-sourcekit lsp-tailwindcss lsp-treemacs
-    lsp-ui swift-helpful
+    lsp-python-ms lsp-rescript lsp-shader lsp-sonarlint lsp-sourcekit lsp-tailwindcss
+    lsp-treemacs lsp-ui swift-helpful
     ;; clients
     lsp-actionscript lsp-ada lsp-angular lsp-astro lsp-bash lsp-beancount lsp-clangd
     lsp-clojure lsp-cmake lsp-crystal lsp-csharp lsp-css lsp-d lsp-dhall
@@ -8383,12 +8384,9 @@ session workspace folder configuration for the server."
         (funcall initialization-options-or-fn)
       initialization-options-or-fn)))
 
-(defvar lsp-client-settings nil
+(defvar lsp-client-settings (make-hash-table)
   "For internal use, any external users please use
   `lsp-register-custom-settings' function instead")
-
-(defun lsp--compare-setting-path (a b)
-  (equal (car a) (car b)))
 
 (defun lsp-register-custom-settings (props)
   "Register PROPS.
@@ -8400,8 +8398,10 @@ property will be ignored if the VALUE is nil.
 
 Example: `(lsp-register-custom-settings `((\"foo.bar.buzz.enabled\" t t)))'
 \(note the double parentheses)"
-  (let ((-compare-fn #'lsp--compare-setting-path))
-    (setq lsp-client-settings (-uniq (append props lsp-client-settings)))))
+  (mapc
+   (-lambda ((path . rest))
+     (puthash path rest lsp-client-settings))
+   props))
 
 (defun lsp-region-text (region)
   "Get the text for REGION in current buffer."
@@ -8421,8 +8421,12 @@ TBL - a hash table, PATHS is the path to the nested VALUE."
 
 ;; sections
 
-(defmacro defcustom-lsp (symbol standard doc &rest args)
+(defalias 'defcustom-lsp 'lsp-defcustom)
+
+(defmacro lsp-defcustom (symbol standard doc &rest args)
   "Defines `lsp-mode' server property."
+  (declare (doc-string 3) (debug (name body))
+           (indent defun))
   (let ((path (plist-get args :lsp-path)))
     (cl-remf args :lsp-path)
     `(progn
@@ -8447,17 +8451,17 @@ TBL - a hash table, PATHS is the path to the nested VALUE."
 (defun lsp-configuration-section (section)
   "Get settings for SECTION."
   (let ((ret (ht-create)))
-    (mapc (-lambda ((path variable boolean?))
-            (when (s-matches? (concat (regexp-quote section) "\\..*") path)
-              (let* ((symbol-value (-> variable
-                                       lsp-resolve-value
-                                       lsp-resolve-value))
-                     (value (if (and boolean? (not symbol-value))
-                                :json-false
-                              symbol-value)))
-                (when (or boolean? value)
-                  (lsp-ht-set ret (s-split "\\." path) value)))))
-          lsp-client-settings)
+    (maphash (-lambda (path (variable boolean?))
+               (when (s-matches? (concat (regexp-quote section) "\\..*") path)
+                 (let* ((symbol-value (-> variable
+                                          lsp-resolve-value
+                                          lsp-resolve-value))
+                        (value (if (and boolean? (not symbol-value))
+                                   :json-false
+                                 symbol-value)))
+                   (when (or boolean? value)
+                     (lsp-ht-set ret (s-split "\\." path) value)))))
+             lsp-client-settings)
     ret))
 
 
