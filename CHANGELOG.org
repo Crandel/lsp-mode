@@ -2,7 +2,7 @@
 ** Unreleased 8.0.1
   * Add [[https://github.com/elixir-tools/credo-language-server][credo-language-server]]
   * Add support for clojure-ts-mode in clojure-lsp client
-  * terraform-ls now supports prefill requied fields and the ability to validate on save.
+  * terraform-ls now supports prefill required fields and the ability to validate on save.
   * Ignore =.terraform= and =.terragrunt-cache= directories
   * ~lsp-bash~ now supports ~bash-ts-mode~
   * ~lsp-ruby-syntax-tree~, ~lsp-solargraph~, ~lsp-sorbet~, ~lsp-steep~, and ~lsp-typeprof~ now support ~ruby-ts-mode~
@@ -81,6 +81,7 @@
     ~parameter~ hint kinds.
   * Add [[https://semgrep.dev][Semgrep]] support
   * Add AWK language server support.
+  * Add support for ~scala-ts-mode~.
 ** Release 8.0.0
   * Add ~lsp-clients-angular-node-get-prefix-command~ to get the Angular server from another location which is still has ~/lib/node_modules~ in it.
   * Set ~lsp-clients-angular-language-server-command~ after the first connection to speed up subsequent connections.
