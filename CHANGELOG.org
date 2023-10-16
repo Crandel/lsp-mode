@@ -1,5 +1,6 @@
 * Changelog
 ** Unreleased 8.0.1
+  * Add [[https://github.com/wader/jq-lsp][jq-lsp]]
   * Add architecture triples for [[https://github.com/WhatsApp/erlang-language-platform][erlang-language-platform]] file downloads, to support macos on ARM and X86.
   * Add semantic token support for [[https://github.com/WhatsApp/erlang-language-platform][erlang-language-platform]] in lsp-erlang client.
   * Update [[https://github.com/WhatsApp/erlang-language-platform][erlang-language-platform]] download file names to match new upstream names.
@@ -347,7 +348,7 @@
   - introduced new command ~lsp-describe-session~ which replaces the existing one ~lsp-capabilities~. The command lists the folders that are part of the workspace and the servers that are associated with the corresponding folder.
   - ~lsp-mode~ displays information about the running server and it's status in the modeline.
   - ~lsp-define-stdio-client~ and ~lsp-define-tcp-client~ are replaced with ~lsp-register-client~
-  - ~lsp~ rely on ~projectile~ or ~project.el~ now only for suggesting project root. Once you open new file in a project and start ~lsp~ it will provide several options(import project, blacklist project, select other directory root). Once you select a root it will be persisted and used for the next sessions.
+  - ~lsp~ rely on ~projectile~ or ~project.el~ now only for suggesting project root. Once you open new file in a project and start ~lsp~ it will provide several options(import project, blocklist project, select other directory root). Once you select a root it will be persisted and used for the next sessions.
   - support for multiple language servers per single file and workspace.
   - changed ~lsp-mode~ settings to more sensible defaults.
   - Removed all synchronous calls from the server startup.
