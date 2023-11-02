@@ -181,13 +181,13 @@ As defined by the Language Server Protocol 3.16."
      lsp-glsl lsp-graphql lsp-hack lsp-grammarly lsp-groovy lsp-haskell lsp-haxe
      lsp-idris lsp-java lsp-javascript lsp-json lsp-kotlin lsp-latex lsp-ltex
      lsp-lua lsp-markdown lsp-marksman lsp-mdx lsp-mint lsp-move lsp-nginx lsp-nim lsp-nix lsp-magik
-     lsp-metals lsp-mssql lsp-ocaml lsp-openscad lsp-pascal lsp-perl lsp-perlnavigator
+     lsp-mojo lsp-metals lsp-mssql lsp-ocaml lsp-openscad lsp-pascal lsp-perl lsp-perlnavigator
      lsp-pls lsp-php lsp-pwsh lsp-pyls lsp-pylsp lsp-pyright lsp-python-ms lsp-purescript
      lsp-r lsp-racket lsp-remark lsp-ruff-lsp lsp-rf lsp-rubocop lsp-rust lsp-semgrep lsp-shader
      lsp-solargraph lsp-sorbet lsp-sourcekit lsp-sonarlint lsp-tailwindcss lsp-tex lsp-terraform
      lsp-toml lsp-ttcn3 lsp-typeprof lsp-v lsp-vala lsp-verilog lsp-vetur lsp-volar
      lsp-vhdl lsp-vimscript lsp-xml lsp-yaml lsp-ruby-lsp lsp-ruby-syntax-tree
-     lsp-sqls lsp-svelte lsp-steep lsp-tilt lsp-zig lsp-jq)
+     lsp-solidity lsp-sqls lsp-svelte lsp-steep lsp-tilt lsp-zig lsp-jq)
   "List of the clients to be automatically required."
   :group 'lsp-mode
   :type '(repeat symbol))
@@ -812,6 +812,7 @@ Changes take effect only when a new session is started."
     (python-mode . "python")
     (python-ts-mode . "python")
     (cython-mode . "python")
+    ("\\(\\.mojo\\|\\.🔥\\)\\'" . "mojo")
     (lsp--render-markdown . "markdown")
     (move-mode . "move")
     (rust-mode . "rust")
@@ -927,6 +928,7 @@ Changes take effect only when a new session is started."
     (gleam-mode . "gleam")
     (graphviz-dot-mode . "dot")
     (tiltfile-mode . "tiltfile")
+    (solidity-mode . "solidity")
     (bibtex-mode . "bibtex")
     (rst-mode . "restructuredtext")
     (glsl-mode . "glsl")
@@ -5065,6 +5067,29 @@ identifier and the position respectively."
                 (lsp--get-buffer-diagnostics))
                'vector)))
 
+(lsp-defun lsp-range-overlapping?((left &as &Range :start left-start :end left-end)
+                                  (right &as &Range :start right-start :end right-end))
+  (or (lsp-point-in-range? right-start left)
+      (lsp-point-in-range? right-end left)
+      (lsp-point-in-range? left-start right)
+      (lsp-point-in-range? left-end right)))
+
+(defun lsp-make-position-1 (position)
+  (lsp-make-position :line (plist-get position :line)
+                     :character (plist-get position :character)))
+
+(defun lsp-cur-possition-diagnostics ()
+  "Return any diagnostics that apply to the current line."
+  (-let* ((start (if (use-region-p) (region-beginning) (point)))
+          (end (if (use-region-p) (region-end) (point)))
+          (current-range (lsp-make-range :start (lsp-make-position-1 (lsp-point-to-position start))
+                                         :end (lsp-make-position-1 (lsp-point-to-position end)))))
+    (->> (lsp--get-buffer-diagnostics)
+         (-filter
+          (-lambda ((&Diagnostic :range))
+            (lsp-range-overlapping? range current-range)))
+         (apply 'vector))))
+
 (defalias 'lsp--cur-line-diagnotics 'lsp-cur-line-diagnostics)
 
 (defun lsp--extract-line-from-buffer (pos)
@@ -5866,7 +5891,7 @@ It will show up only if current point has signature help."
         :range (if (use-region-p)
                    (lsp--region-to-range (region-beginning) (region-end))
                  (lsp--region-to-range (point) (point)))
-        :context `( :diagnostics ,(lsp-cur-line-diagnostics)
+        :context `( :diagnostics ,(lsp-cur-possition-diagnostics)
                     ,@(when kind (list :only (vector kind))))))
 
 (defun lsp-code-actions-at-point (&optional kind)
