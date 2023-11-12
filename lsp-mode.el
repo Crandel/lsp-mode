@@ -176,7 +176,7 @@ As defined by the Language Server Protocol 3.16."
 (defcustom lsp-client-packages
   '( ccls lsp-actionscript lsp-ada lsp-angular lsp-ansible lsp-awk lsp-astro lsp-bash
      lsp-beancount lsp-clangd lsp-clojure lsp-cmake lsp-credo lsp-crystal lsp-csharp lsp-css
-     lsp-d lsp-dart lsp-dhall lsp-docker lsp-dockerfile lsp-elm lsp-elixir lsp-emmet
+     lsp-cypher lsp-d lsp-dart lsp-dhall lsp-docker lsp-dockerfile lsp-elm lsp-elixir lsp-emmet
      lsp-erlang lsp-eslint lsp-fortran lsp-fsharp lsp-gdscript lsp-go lsp-gleam
      lsp-glsl lsp-graphql lsp-hack lsp-grammarly lsp-groovy lsp-haskell lsp-haxe
      lsp-idris lsp-java lsp-javascript lsp-json lsp-kotlin lsp-latex lsp-ltex
@@ -776,6 +776,7 @@ Changes take effect only when a new session is started."
     ("\\.php$" . "php")
     ("\\.rs\\'" . "rust")
     ("\\.sql$" . "sql")
+    ("\\.cypher$" . "cypher")
     ("\\.svelte$" . "svelte")
     ("\\.toml\\'" . "toml")
     ("\\.ts$" . "typescript")
@@ -887,6 +888,7 @@ Changes take effect only when a new session is started."
     (csharp-ts-mode . "csharp")
     (plain-tex-mode . "plaintex")
     (context-mode . "context")
+    (cypher-mode . "cypher")
     (latex-mode . "latex")
     (v-mode . "v")
     (vhdl-mode . "vhdl")
@@ -933,6 +935,7 @@ Changes take effect only when a new session is started."
     (rst-mode . "restructuredtext")
     (glsl-mode . "glsl")
     (shader-mode . "shaderlab")
+    (wgsl-mode . "wgsl")
     (jq-mode . "jq")
     (jq-ts-mode . "jq"))
   "Language id configuration.")
@@ -1145,7 +1148,7 @@ calling `remove-overlays'.")
 
 (defvar-local lsp--virtual-buffer-point-max nil)
 
-(cl-defmethod lsp-execute-command (server command arguments)
+(cl-defmethod lsp-execute-command (_server _command _arguments)
   "Ask SERVER to execute COMMAND with ARGUMENTS.")
 
 (defun lsp-elt (sequence n)
@@ -3577,6 +3580,12 @@ and expand the capabilities section"
   (setf (lsp--workspace-shutdown-action lsp--cur-workspace) (or (and restart 'restart) 'shutdown))
   (lsp--uninitialize-workspace))
 
+(defcustom lsp-inlay-hint-enable nil
+  "If non-nil it will enable inlay hints."
+  :type 'boolean
+  :group 'lsp-mode
+  :package-version '(lsp-mode . "8.0.1"))
+
 (defun lsp--uninitialize-workspace ()
   "Cleanup buffer state.
 When a workspace is shut down, by request or from just
@@ -3586,7 +3595,7 @@ disappearing, unset all the variables related to it."
     (mapc (lambda (buf)
             (when (lsp-buffer-live-p buf)
               (lsp-with-current-buffer buf
-                (lsp-managed-mode -1))))
+                                       (lsp-managed-mode -1))))
           buffers)
     (lsp-diagnostics--workspace-cleanup lsp--cur-workspace)))
 
@@ -7384,6 +7393,9 @@ Originally coppied from eglot."
                          " "))
     program))
 
+(defvar tramp-use-ssh-controlmaster-options)
+(defvar tramp-ssh-controlmaster-options)
+
 (defun lsp-stdio-connection (command &optional test-command)
   "Returns a connection property list using COMMAND.
 COMMAND can be: A string, denoting the command to launch the
@@ -9600,12 +9612,6 @@ call-site)."
   "If non-nil update inlay hints immediately when scrolling or
 modifying window sizes."
   :type 'boolean
-  :package-version '(lsp-mode . "8.0.1"))
-
-(defcustom lsp-inlay-hint-enable nil
-  "If non-nil it will enable inlay hints."
-  :type 'boolean
-  :group 'lsp-mode
   :package-version '(lsp-mode . "8.0.1"))
 
 (defun lsp--format-inlay (text kind)
