@@ -770,6 +770,7 @@ Changes take effect only when a new session is started."
     ("\\.java\\'" . "java")
     ("\\.js$" . "javascript")
     ("\\.json$" . "json")
+    ("\\.jsonnet$" . "jsonnet")
     ("\\.jsonc$" . "jsonc")
     ("\\.jsx$" . "javascriptreact")
     ("\\.jq$"  . "jq")
@@ -895,6 +896,7 @@ Changes take effect only when a new session is started."
     (latex-mode . "latex")
     (v-mode . "v")
     (vhdl-mode . "vhdl")
+    (vhdl-ts-mode . "vhdl")
     (verilog-mode . "verilog")
     (terraform-mode . "terraform")
     (ess-julia-mode . "julia")
@@ -5990,6 +5992,7 @@ Request codeAction/resolve for more info if server supports."
     (java-ts-mode               . java-ts-mode-indent-offset)
     (jde-mode                   . c-basic-offset)                   ; Java (JDE)
     (js-mode                    . js-indent-level)                  ; JavaScript
+    (js-ts-mode                 . js-indent-level)
     (js2-mode                   . js2-basic-offset)                 ; JavaScript-IDE
     (js3-mode                   . js3-indent-level)                 ; JavaScript-IDE
     (json-mode                  . js-indent-level)                  ; JSON
