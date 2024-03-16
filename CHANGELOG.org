@@ -109,6 +109,8 @@
   * Add Hylang support.
   * Add support for clojure-ts derived modes.
   * Add support for installing Ada Language Server.
+  * Add Nushell support
+
 ** Release 8.0.0
   * Add ~lsp-clients-angular-node-get-prefix-command~ to get the Angular server from another location which is still has ~/lib/node_modules~ in it.
   * Set ~lsp-clients-angular-language-server-command~ after the first connection to speed up subsequent connections.
@@ -174,6 +176,7 @@
   * Add support for signatureHelp using ~posframe~. #1999
   * Add ~iedit~ integration. #2478
   * Add client for Verible SystemVerilog language Server ([[https://github.com/chipsalliance/verible]])
+  * Add Cucumber support.
 
 ** Release 7.0.1
   * Introduced ~lsp-diagnostics-mode~.

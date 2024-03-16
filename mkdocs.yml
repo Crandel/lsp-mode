@@ -64,6 +64,7 @@ nav:
     - CMake: page/lsp-cmake.md
     - Crystal: page/lsp-crystal.md
     - CSS/LessCSS/SASS/SCSS: page/lsp-css.md
+    - Cucumber: page/lsp-cucumber.md
     - Cypher: page/lsp-cypher.md
     - D: page/lsp-d.md
     - Dart: https://emacs-lsp.github.io/lsp-dart
@@ -112,6 +113,7 @@ nav:
     - Nix (nixd-lsp): page/lsp-nix-nixd.md
     - Nix (rnix-lsp): page/lsp-nix-rnix.md
     - Nix (nil): page/lsp-nix-nil.md
+    - Nushell: page/lsp-nushell.md
     - OCaml (ocaml-lsp): page/lsp-ocaml-lsp-server.md
     - OpenSCAD: page/lsp-openscad.md
     - Pascal/Object Pascal: page/lsp-pascal.md
