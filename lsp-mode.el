@@ -181,7 +181,7 @@ As defined by the Language Server Protocol 3.16."
      lsp-emmet lsp-erlang lsp-eslint lsp-fortran lsp-fsharp lsp-gdscript lsp-go
      lsp-golangci-lint lsp-gleam lsp-glsl lsp-graphql lsp-hack lsp-grammarly
      lsp-groovy lsp-haskell lsp-haxe lsp-idris lsp-java lsp-javascript lsp-json
-     lsp-kotlin lsp-latex lsp-ltex lsp-lua lsp-markdown lsp-marksman lsp-mdx
+     lsp-kotlin lsp-latex lsp-lisp lsp-ltex lsp-lua lsp-markdown lsp-marksman lsp-mdx
      lsp-mint lsp-move lsp-nginx lsp-nim lsp-nix lsp-magik lsp-mojo lsp-metals
      lsp-mssql lsp-nushell lsp-ocaml lsp-openscad lsp-pascal lsp-perl lsp-perlnavigator
      lsp-pls lsp-php lsp-pwsh lsp-pyls lsp-pylsp lsp-pyright lsp-python-ms
@@ -8514,7 +8514,7 @@ session workspace folder configuration for the server."
         (funcall initialization-options-or-fn)
       initialization-options-or-fn)))
 
-(defvar lsp-client-settings (make-hash-table)
+(defvar lsp-client-settings (make-hash-table :test 'equal)
   "For internal use, any external users please use
   `lsp-register-custom-settings' function instead")
 
