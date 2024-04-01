@@ -135,6 +135,7 @@ nav:
     - Python (Pyright): https://emacs-lsp.github.io/lsp-pyright
     - Python (Microsoft): https://emacs-lsp.github.io/lsp-python-ms
     - Python (Ruff): page/lsp-ruff-lsp.md
+    - QML: page/lsp-qml.md
     - R: page/lsp-r.md
     - Racket (jeapostrophe): page/lsp-racket-langserver.md
     - Racket (Theia): page/lsp-racket-language-server.md
@@ -175,6 +176,7 @@ nav:
     - wgsl: page/lsp-wgsl.md
     - XML: page/lsp-xml.md
     - YAML: page/lsp-yaml.md
+    - YANG: page/lsp-yang.md
     - Zig: page/lsp-zig.md
   - Debugging:
       - https://emacs-lsp.github.io/dap-mode
