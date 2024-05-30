@@ -3933,10 +3933,11 @@ If any filters, checks if it applies for PATH."
 (defun lsp--suggest-project-root ()
   "Get project root."
   (or
-   (when (featurep 'projectile) (condition-case nil
-                                    (projectile-project-root)
-                                  (error nil)))
-   (when (featurep 'project)
+   (when (fboundp 'projectile-project-root)
+     (condition-case nil
+         (projectile-project-root)
+       (error nil)))
+   (when (fboundp 'project-current)
      (when-let ((project (project-current)))
        (if (fboundp 'project-root)
            (project-root project)
@@ -5159,11 +5160,12 @@ identifier and the position respectively."
                             (max (min end-char len) 0)
                             'xref-match t line)
     ;; LINE is nil when FILENAME is not being current visited by any buffer.
-    (xref-make (or line filename)
-               (xref-make-file-location
-                filename
-                (lsp-translate-line (1+ start-line))
-                (lsp-translate-column start-char)))))
+    (xref-make-match (or line filename)
+                     (xref-make-file-location
+                      filename
+                      (lsp-translate-line (1+ start-line))
+                      (lsp-translate-column start-char))
+                     (- end-char start-char))))
 
 (defun lsp--location-uri (loc)
   (if (lsp-location? loc)
