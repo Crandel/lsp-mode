@@ -956,6 +956,7 @@ Changes take effect only when a new session is started."
     (idris-mode . "idris")
     (idris2-mode . "idris2")
     (gleam-mode . "gleam")
+    (gleam-ts-mode . "gleam")
     (graphviz-dot-mode . "dot")
     (tiltfile-mode . "tiltfile")
     (solidity-mode . "solidity")
@@ -6027,7 +6028,7 @@ in place, based on the BOOLEAN-ACTION-ARGUMENTS list. The values
 in this list can be either symbols or lists of symbols that
 represent paths to boolean arguments in code actions:
 
-> (lsp-fix-code-action-booleans command '(:foo :bar (:some :nested :boolean)))
+> (lsp-fix-code-action-booleans command `(:foo :bar (:some :nested :boolean)))
 
 When there are available code actions, the server sends
 `lsp-mode' a list of possible command names and arguments as
