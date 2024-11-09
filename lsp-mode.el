@@ -182,7 +182,7 @@ As defined by the Language Server Protocol 3.16."
      lsp-graphql lsp-groovy lsp-hack lsp-haskell lsp-haxe lsp-idris lsp-java
      lsp-javascript lsp-jq lsp-json lsp-kotlin lsp-latex lsp-lisp lsp-ltex
      lsp-lua lsp-fennel lsp-magik lsp-markdown lsp-marksman lsp-mdx lsp-meson lsp-metals lsp-mint
-     lsp-mojo lsp-move lsp-mssql lsp-nginx lsp-nim lsp-nix lsp-nushell lsp-ocaml
+     lsp-mojo lsp-move lsp-mssql lsp-nextflow lsp-nginx lsp-nim lsp-nix lsp-nushell lsp-ocaml
      lsp-openscad lsp-pascal lsp-perl lsp-perlnavigator lsp-php lsp-pls
      lsp-purescript lsp-pwsh lsp-pyls lsp-pylsp lsp-pyright lsp-python-ms
      lsp-qml lsp-r lsp-racket lsp-remark lsp-rf lsp-roslyn lsp-rubocop lsp-ruby-lsp
@@ -835,6 +835,7 @@ Changes take effect only when a new session is started."
     (java-ts-mode . "java")
     (jdee-mode . "java")
     (groovy-mode . "groovy")
+    (nextflow-mode . "nextflow")
     (python-mode . "python")
     (python-ts-mode . "python")
     (cython-mode . "python")
@@ -3715,6 +3716,7 @@ disappearing, unset all the variables related to it."
                                                                    :json-false))))))
                    ,@(when lsp-lens-enable '((codeLens . ((refreshSupport . t)))))
                    ,@(when lsp-inlay-hint-enable '((inlayHint . ((refreshSupport . :json-false)))))
+                   (diagnostics . ((refreshSupport . :json-false)))
                    (fileOperations . ((didCreate . :json-false)
                                       (willCreate . :json-false)
                                       (didRename . t)
@@ -6952,6 +6954,8 @@ server. WORKSPACE is the active workspace."
                       (when (and lsp-lens-enable
                                  (fboundp 'lsp--lens-on-refresh))
                         (lsp--lens-on-refresh workspace))
+                      nil)
+                     ((equal method "workspace/diagnostic/refresh")
                       nil)
                      (t (lsp-warn "Unknown request method: %s" method) nil))))
     ;; Send response to the server.
