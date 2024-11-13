@@ -189,7 +189,7 @@ As defined by the Language Server Protocol 3.16."
      lsp-ruby-syntax-tree lsp-ruff lsp-rust lsp-semgrep lsp-shader
      lsp-solargraph lsp-solidity lsp-sonarlint lsp-sorbet lsp-sourcekit
      lsp-sql lsp-sqls lsp-steep lsp-svelte lsp-tailwindcss lsp-terraform
-     lsp-tex lsp-tilt lsp-toml lsp-trunk lsp-ttcn3 lsp-typeprof lsp-v
+     lsp-tex lsp-tilt lsp-toml lsp-trunk lsp-ttcn3 lsp-typeprof lsp-typespec lsp-v
      lsp-vala lsp-verilog lsp-vetur lsp-vhdl lsp-vimscript lsp-volar lsp-wgsl
      lsp-xml lsp-yaml lsp-yang lsp-zig)
   "List of the clients to be automatically required."
@@ -796,6 +796,7 @@ Changes take effect only when a new session is started."
     ("\\.svelte$" . "svelte")
     ("\\.toml\\'" . "toml")
     ("\\.ts$" . "typescript")
+    ("\\.tsp$" . "typespec")
     ("\\.tsx$" . "typescriptreact")
     ("\\.ttcn3$" . "ttcn3")
     ("\\.vue$" . "vue")
@@ -891,6 +892,7 @@ Changes take effect only when a new session is started."
     (js-ts-mode . "javascript")
     (typescript-mode . "typescript")
     (typescript-ts-mode . "typescript")
+    (typespec-mode . "typespec")
     (tsx-ts-mode . "typescriptreact")
     (svelte-mode . "svelte")
     (fsharp-mode . "fsharp")
@@ -3771,7 +3773,9 @@ disappearing, unset all the variables related to it."
                                                          . ((properties . ["documentation"
                                                                            "detail"
                                                                            "additionalTextEdits"
-                                                                           "command"])))
+                                                                           "command"
+                                                                           "insertTextFormat"
+                                                                           "insertTextMode"])))
                                                         (insertTextModeSupport . ((valueSet . [1 2])))))
                                      (contextSupport . t)
                                      (dynamicRegistration . t)))
@@ -5797,7 +5801,10 @@ RENDER-ALL - nil if only the signature should be rendered."
               (list :position (point)
                     :background-color (face-attribute 'lsp-signature-posframe :background nil t)
                     :foreground-color (face-attribute 'lsp-signature-posframe :foreground nil t)
-                    :border-color (face-attribute 'font-lock-comment-face :foreground nil t))))
+                    :border-color (face-attribute (if (facep 'child-frame-border)
+                                                      'child-frame-border
+                                                    'internal-border)
+                                                  :background nil t))))
     (posframe-hide " *lsp-signature*")))
 
 (defun lsp--handle-signature-update (signature)
@@ -5855,6 +5862,11 @@ It will show up only if current point has signature help."
                                     (list lsp-signature-doc-lines))))
   (lsp-signature-activate))
 
+(defface lsp-signature-highlight-function-argument
+  '((t :inherit eldoc-highlight-function-argument))
+  "The face to use to highlight function arguments in signatures."
+  :group 'lsp-mode)
+
 (defun lsp--signature->message (signature-help)
   "Generate eldoc message from SIGNATURE-HELP response."
   (setq lsp--signature-last signature-help)
@@ -5900,7 +5912,7 @@ It will show up only if current point has signature help."
                      (end (if (stringp selected-param-label)
                               (+ start (length selected-param-label))
                             (cl-second selected-param-label))))
-          (add-face-text-property start end 'eldoc-highlight-function-argument nil label)))
+          (add-face-text-property start end 'lsp-signature-highlight-function-argument nil label)))
       (concat prefix label method-docs))))
 
 (defun lsp-signature ()
