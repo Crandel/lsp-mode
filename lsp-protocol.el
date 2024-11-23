@@ -115,7 +115,7 @@ Example usage with `dash`.
                                                        (if (special-variable-p key-sym)
                                                            `((,key ,(intern (format "%s_" (symbol-name key-sym)))))
                                                          key-sym)))
-                                                     params)
+                                                   params)
                                 &allow-other-keys)
                        ,(format "Constructs %s from `plist.'
 Allowed params: %s" interface (reverse (-map #'cl-first params)))
@@ -827,5 +827,4 @@ See `-let' for a description of the destructuring mechanism."
 
 
 (provide 'lsp-protocol)
-
 ;;; lsp-protocol.el ends here
